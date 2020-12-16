@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option csharp_namespace = "gRPCServer";
+
+package transport;
+
+service Transporter{
+  rpc Execute (RequestBase) returns (ResponseBase);
+}
+
+message RequestBase{
+  string AssemblyName = 1;
+  string ClassName = 2;
+  string Message = 3;
+  string MethodName = 4;
+}
+
+message ResponseBase{
+  string AssemblyName = 1;
+  string ClassName = 2;
+  string Message = 3;
+}
