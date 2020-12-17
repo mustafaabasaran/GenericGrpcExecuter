@@ -4,7 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Grpc.Core;
+using gRPCServer.Factory;
+using gRPCServer.Helper;
 using gRPCServer.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -14,7 +17,7 @@ namespace gRPCServer
     {
         
         private readonly ILogger<ExecuterService> _logger;
-        public ExecuterService(ILogger<ExecuterService> logger)
+        public ExecuterService(ILogger<ExecuterService> logger, IServiceCollection collection)
         {
             _logger = logger;
         }
@@ -22,7 +25,7 @@ namespace gRPCServer
 
         public override Task<ResponseBase> Execute(RequestBase request, ServerCallContext context)
         {
-            var response = DoSomething(request);
+            var response = Execute(request);
             
             return Task.FromResult(new ResponseBase
             {
@@ -30,37 +33,27 @@ namespace gRPCServer
             });
         }
 
-        public ResponseBase DoSomething(RequestBase requestBase)
+        public ResponseBase Execute(RequestBase requestBase)
         {
             var assemly = Assembly.Load(requestBase.AssemblyName);
+            
             Type requestType = assemly.GetTypes().FirstOrDefault(x => x.FullName == requestBase.ClassName);
             var requestObj = JsonConvert.DeserializeObject(requestBase.Message, requestType);
 
-            AssemblyData assemblyData = GetServerAssemblyData(requestType);
+            AssemblyData assemblyData = ReflectionHelper.GetServerAssemblyData(requestType);
             var finalResponse = ExecuteFinal(assemblyData.Type, requestBase.MethodName, new object[1] {requestObj});
 
             return new ResponseBase() {Message = finalResponse.ToString()};
         }
 
-        public string GetServerSideClass(Type type)
-        {
-            return type.Name.Replace("Request", "");
-        }
-
         public object ExecuteFinal(Type type, string methodName, object[] args)
         {
+            using var scope = ServiceActivator.GetScope();
             var classObject = Activator.CreateInstance(type);
             var response = type.InvokeMember(methodName, BindingFlags.Default | BindingFlags.InvokeMethod, null, classObject, args );
             return response;
         }
 
-        public AssemblyData GetServerAssemblyData(Type type)
-        {
-            var data = new AssemblyData {ClassName = type.Namespace.Replace("Model", "Action") +"."+ GetServerSideClass(type) };
-            data.DllName = type.Namespace.Replace("Model", "Action") + ".dll";
-            data.Assembly =  Assembly.LoadFrom(Path.Combine(System.AppContext.BaseDirectory, data.DllName));
-            data.Type = data.Assembly.GetType(data.ClassName);
-            return data;
-        }
+       
     }
 }

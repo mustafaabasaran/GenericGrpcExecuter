@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using gRPCServer.Factory;
 
 namespace gRPCServer
 {
@@ -17,6 +18,7 @@ namespace gRPCServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
+            services.AddSingleton<IServiceCollection>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -26,7 +28,7 @@ namespace gRPCServer
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            ServiceActivator.Configure(app.ApplicationServices);
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
