@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
+using gRPCCommon.Db;
 using gRPCCommonss;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace gRPCServer
@@ -23,8 +25,9 @@ namespace gRPCServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
-            var s = Configuration.GetSection("PipeLine");
-            services.Configure<List<PipeLineDefinition>>(Configuration.GetSection("PipeLine"));
+            services.AddDbContext<PostgreSqlDbContext>(options =>
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), b=> b.MigrationsAssembly("gRPCCommon")));
+            services.AddDbContext<DbContext>((provider, builder) => provider.GetService<PostgreSqlDbContext>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
