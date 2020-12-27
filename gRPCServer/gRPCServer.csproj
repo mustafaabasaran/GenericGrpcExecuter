@@ -14,11 +14,15 @@
     <PackageReference Include="Grpc.AspNetCore" Version="2.32.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="protobuf-net" Version="3.0.73" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Customer.Action\Customer.Action.csproj" />
     <ProjectReference Include="..\Customer.Model\Customer.Model.csproj" />
+    <ProjectReference Include="..\gRPCCommon\gRPCCommon.csproj" />
+    <ProjectReference Include="..\gRPCPipeLine\gRPCPipeLine.csproj" />
+    <ProjectReference Include="..\gRPCServiceBus\gRPCServiceBus.csproj" />
   </ItemGroup>
 
 </Project>

@@ -18,14 +18,13 @@ namespace gRPCClient
             var channel = GrpcChannel.ForAddress("https://localhost:5001");
             var client = new Transporter.TransporterClient(channel);
 
-            AddressRequest req = new AddressRequest() {CustomerId = "503980"};
+            AddressRequest req = new AddressRequest() {CustomerId = "503980", MethodName = "Doit"};
 
-            RequestBase requestBase = new RequestBase()
+            Request requestBase = new Request()
             {
                 Message = JsonConvert.SerializeObject(req),
-                MethodName = "Doit",
                 ClassName = req.GetType().ToString(),
-                AssemblyName = Assembly.GetAssembly(req.GetType()).ToString()
+                AssemblyName = Assembly.GetAssembly(req.GetType())?.ToString()
             };
 
             var response = await client.ExecuteAsync(requestBase);

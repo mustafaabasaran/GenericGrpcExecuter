@@ -1,15 +1,11 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
-using gRPCServer.Factory;
-using gRPCServer.Helper;
-using gRPCServer.Models;
-using Microsoft.Extensions.DependencyInjection;
+using gRPCCommon;
+using gRPCCommonss;
+using gRPCServiceBus;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
 
 namespace gRPCServer
 {
@@ -17,43 +13,35 @@ namespace gRPCServer
     {
         
         private readonly ILogger<ExecuterService> _logger;
-        public ExecuterService(ILogger<ExecuterService> logger, IServiceCollection collection)
+        private IOptions<List<PipeLineDefinition>> _pipes;
+
+        public ExecuterService(ILogger<ExecuterService> logger, IOptions<List<PipeLineDefinition>> pipes)
         {
             _logger = logger;
+            _pipes = pipes;
         }
 
-
-        public override Task<ResponseBase> Execute(RequestBase request, ServerCallContext context)
+        public override Task<Response> Execute(Request request, ServerCallContext context)
         {
-            var response = Execute(request);
-            
-            return Task.FromResult(new ResponseBase
+            var dispatcherData = ToDispatcherData(request);
+            var dispatcherResponse = Dispatcher.Dispatch(dispatcherData);
+            return Task.FromResult(ToResponseData(dispatcherResponse));
+        }
+
+        static DispatcherData ToDispatcherData(Request request)
+        {
+            return new DispatcherData(request.Message, request.AssemblyName, request.ClassName);
+        }
+
+        static Response ToResponseData(ResponseBase responseBase)
+        {
+            return new Response()
             {
-                Message = response.Message
-            });
+                Message = responseBase.Message,
+                ErrorMessage = responseBase.ErrorMessage,
+                IsSuccess = responseBase.IsSuccess
+            };
         }
 
-        public ResponseBase Execute(RequestBase requestBase)
-        {
-            var assemly = Assembly.Load(requestBase.AssemblyName);
-            
-            Type requestType = assemly.GetTypes().FirstOrDefault(x => x.FullName == requestBase.ClassName);
-            var requestObj = JsonConvert.DeserializeObject(requestBase.Message, requestType);
-
-            AssemblyData assemblyData = ReflectionHelper.GetServerAssemblyData(requestType);
-            var finalResponse = ExecuteFinal(assemblyData.Type, requestBase.MethodName, new object[1] {requestObj});
-
-            return new ResponseBase() {Message = finalResponse.ToString()};
-        }
-
-        public object ExecuteFinal(Type type, string methodName, object[] args)
-        {
-            using var scope = ServiceActivator.GetScope();
-            var classObject = Activator.CreateInstance(type);
-            var response = type.InvokeMember(methodName, BindingFlags.Default | BindingFlags.InvokeMethod, null, classObject, args );
-            return response;
-        }
-
-       
     }
 }

@@ -5,18 +5,17 @@ option csharp_namespace = "gRPCServer";
 package transport;
 
 service Transporter{
-  rpc Execute (RequestBase) returns (ResponseBase);
+  rpc Execute (Request) returns (Response);
 }
 
-message RequestBase{
+message Request{
   string AssemblyName = 1;
   string ClassName = 2;
   string Message = 3;
-  string MethodName = 4;
 }
 
-message ResponseBase{
-  string AssemblyName = 1;
-  string ClassName = 2;
-  string Message = 3;
+message Response{
+  string Message = 1;
+  bool IsSuccess = 2;
+  string ErrorMessage = 3;
 }

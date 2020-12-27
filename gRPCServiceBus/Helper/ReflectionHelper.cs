@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Reflection;
-using gRPCServer.Models;
+using gRPCServiceBus.Data;
 
-namespace gRPCServer.Helper
+namespace gRPCServiceBus.Helper
 {
     public static class ReflectionHelper
     {
@@ -13,14 +13,18 @@ namespace gRPCServer.Helper
         }
         
         
-        public static AssemblyData GetServerAssemblyData(Type type)
+        public static AssemblyData GetServerAssemblyData(Type type, string applicationDirectory)
         {
             var data = new AssemblyData
             {
                 ClassName = type.Namespace.Replace("Model", "Action") + "." + GetServerSideClass(type),
                 DllName = type.Namespace.Replace("Model", "Action") + ".dll"
             };
-            data.Assembly =  Assembly.LoadFrom(Path.Combine(System.AppContext.BaseDirectory, data.DllName));
+
+            if (string.IsNullOrEmpty(applicationDirectory))
+                applicationDirectory = System.AppContext.BaseDirectory;
+            
+            data.Assembly =  Assembly.LoadFrom(Path.Combine(applicationDirectory, data.DllName));
             data.Type = data.Assembly.GetType(data.ClassName);
             return data;
         }

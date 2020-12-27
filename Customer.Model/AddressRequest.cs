@@ -1,6 +1,8 @@
+using gRPCCommon;
+
 namespace Customer.Model
 {
-    public class AddressRequest
+    public class AddressRequest : RequestBase
     {
         public string CustomerId { get; set; }
         public string CityName { get; set; }
